@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All In Poker — Aprenda Texas Hold'em</title>
+  <meta name="description" content="Tutorial gamificado de Texas Hold'em. Aprenda poker do zero com níveis interativos, quizzes e conquistas.">
+  <meta property="og:title" content="All In Poker — Aprenda Texas Hold'em">
+  <meta property="og:description" content="Tutorial gamificado de poker. Do zero ao showdown.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="header-logo">♠ All In Poker</a>
+    <div class="header-stats">
+      <span class="xp-badge">⭐ 0 XP</span>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style="width: 0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <h1 class="page-title">♠ All In Poker</h1>
+    <p class="page-subtitle">Do zero ao showdown — Texas Hold'em</p>
+
+    <div class="level-map" id="levelMap"></div>
+
+    <section class="achievements-section">
+      <h2 class="achievements-title">🏆 Conquistas</h2>
+      <div class="achievements-grid" id="achievementsGrid"></div>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    const LEVELS = [
+      { num: 1, name: 'O Baralho', desc: 'Naipes, valores e como ler uma carta', icon: '🃏', color: '#1a472a' },
+      { num: 2, name: 'Ranking de Mãos', desc: 'As 10 mãos do poker, de High Card a Royal Flush', icon: '🏆', color: '#1a3a5c' },
+      { num: 3, name: 'Regras do Texas Hold\'em', desc: 'Blinds, dealer, flop/turn/river e ações', icon: '🎯', color: '#5c1a1a' },
+      { num: 4, name: 'Anatomia de uma Rodada', desc: 'Simulação passo a passo de uma mão completa', icon: '🔄', color: '#4a1a5c' },
+      { num: 5, name: 'Posição e Estratégia', desc: 'Posições na mesa, quando jogar e pot odds', icon: '🧠', color: '#5c4a1a' },
+      { num: 6, name: 'Glossário & Cheat Sheet', desc: 'Referência rápida — sua recompensa final', icon: '👑', color: '#1a1a1a' }
+    ];
+
+    function renderLevelMap() {
+      const map = document.getElementById('levelMap');
+      map.innerHTML = '';
+
+      LEVELS.forEach((level, i) => {
+        const unlocked = App.isLevelUnlocked(level.num);
+        const completed = App.isLevelCompleted(level.num);
+
+        let statusClass = 'level-locked';
+        let statusText = '🔒 Bloqueado';
+
+        if (completed) {
+          statusClass = 'level-completed';
+          statusText = '✅ Completo';
+        } else if (unlocked) {
+          statusClass = 'level-open';
+          statusText = '🔓 Aberto';
+        }
+
+        const card = document.createElement('a');
+        card.className = `level-card ${statusClass}`;
+        card.href = unlocked ? `level.html?level=${level.num}` : '#';
+        if (!unlocked) card.onclick = (e) => e.preventDefault();
+
+        card.innerHTML = `
+          <div class="level-icon">${level.icon}</div>
+          <div class="level-info">
+            <div class="level-name">Nível ${level.num} — ${level.name}</div>
+            <div class="level-desc">${level.desc}</div>
+          </div>
+          <div class="level-status">${statusText}</div>
+        `;
+
+        if (level.num === 6 && !completed && unlocked) {
+          card.style.border = '2px solid gold';
+        }
+
+        map.appendChild(card);
+
+        if (i < LEVELS.length - 1) {
+          const connector = document.createElement('div');
+          connector.className = 'level-connector';
+          connector.textContent = '↓';
+          map.appendChild(connector);
+        }
+      });
+    }
+
+    function renderAchievements() {
+      const grid = document.getElementById('achievementsGrid');
+      const state = App.getState();
+
+      grid.innerHTML = App.ACHIEVEMENTS.map(ach => {
+        const unlocked = state.achievements.includes(ach.id);
+        return `
+          <div class="achievement ${unlocked ? 'unlocked' : 'locked'}">
+            <div class="achievement-icon">${ach.icon}</div>
+            <div class="achievement-name">${ach.name}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    App.load();
+    renderLevelMap();
+    renderAchievements();
+    App.updateHeaderXP();
+  </script>
+</body>
+</html>

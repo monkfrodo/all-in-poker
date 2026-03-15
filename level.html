@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All In Poker — Nível</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="header-logo">♠ All In Poker</a>
+    <div class="header-stats">
+      <span class="xp-badge">⭐ 0 XP</span>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style="width: 0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <button class="btn-back-home" onclick="window.location.href='index.html'">← Voltar ao Mapa</button>
+
+    <div class="level-header">
+      <h1 id="levelTitle">Carregando...</h1>
+      <div class="step-indicator" id="stepIndicator"></div>
+    </div>
+
+    <div id="stepContent" class="step-content">
+      <p>Carregando conteúdo...</p>
+    </div>
+
+    <div class="step-nav" id="stepNav">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevStep()">← Anterior</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextStep()">Próximo →</button>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/cards.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/levels.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const levelNum = parseInt(params.get('level')) || 1;
+    const levelData = LevelData[levelNum];
+    let currentStep = 0;
+    let inQuiz = false;
+
+    if (!levelData || !App.isLevelUnlocked(levelNum)) {
+      window.location.href = 'index.html';
+    }
+
+    const totalSteps = levelData.steps.length + (levelData.quiz ? 1 : 0);
+
+    function renderStep() {
+      const titleEl = document.getElementById('levelTitle');
+      const indicatorEl = document.getElementById('stepIndicator');
+      const contentEl = document.getElementById('stepContent');
+      const btnPrev = document.getElementById('btnPrev');
+      const btnNext = document.getElementById('btnNext');
+      const navEl = document.getElementById('stepNav');
+
+      titleEl.textContent = `${levelData.icon} Nível ${levelNum} — ${levelData.name}`;
+      document.title = `All In Poker — Nível ${levelNum}: ${levelData.name}`;
+
+      if (currentStep < levelData.steps.length) {
+        inQuiz = false;
+        const step = levelData.steps[currentStep];
+        indicatorEl.textContent = `Etapa ${currentStep + 1} de ${totalSteps}`;
+        contentEl.innerHTML = `<h2>${step.title}</h2>${step.content}`;
+        navEl.style.display = 'flex';
+        btnPrev.disabled = currentStep === 0;
+
+        if (currentStep === levelData.steps.length - 1 && levelData.quiz) {
+          btnNext.textContent = '📝 Fazer Quiz →';
+        } else if (currentStep === levelData.steps.length - 1 && !levelData.quiz) {
+          btnNext.textContent = '✅ Concluir Nível';
+        } else {
+          btnNext.textContent = 'Próximo →';
+        }
+      } else if (levelData.quiz) {
+        inQuiz = true;
+        indicatorEl.textContent = `Etapa ${totalSteps} de ${totalSteps} — Quiz`;
+        navEl.style.display = 'none';
+        contentEl.innerHTML = '<h2>📝 Quiz</h2><p>Responda as perguntas para desbloquear o próximo nível. Você precisa acertar pelo menos 70%.</p><div id="quizArea"></div>';
+        Quiz.start(levelNum, levelData.quiz, document.getElementById('quizArea'));
+      } else {
+        App.completeLevel(levelNum);
+        window.location.href = 'index.html';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps - 1) {
+        currentStep++;
+        renderStep();
+      } else if (!levelData.quiz) {
+        App.completeLevel(levelNum);
+        window.location.href = 'index.html';
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (inQuiz) return;
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextStep();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevStep();
+      }
+    });
+
+    App.load();
+    App.updateHeaderXP();
+    renderStep();
+  </script>
+</body>
+</html>
